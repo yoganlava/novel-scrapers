@@ -25,19 +25,12 @@ const fanficID = [
 
 async function getBookInfo(id: number) {
   let res = await fetch(
-    // `https://www.webnovel.com/go/pcm/category/categoryAjax?pageIndex=${
-    //   i + 1
-    // }&categoryId=0&categoryType=1&sourceType=0&bookStatus=0&orderBy=1`
     `https://m.webnovel.com/go/pcm/book/get-book-detail?bookId=${id}`
   );
   return (await res.json()).data.bookInfo;
 }
 
-
-
 async function scrapeWebnovel() {
-  // ! GET COVER
-  fs.closeSync(fs.openSync("webnovel.txt", "w"));
   let bookList: Book[] = [];
   for (let i = 0; i < 500; i++) {
     let res = await fetch(
@@ -58,10 +51,10 @@ async function scrapeWebnovel() {
       });
       let bookInfo = await getBookInfo(book.bookId);
       let bookType = (() => {
-        if (bookInfo.bookType == 1) return BookType.translation;
+        if (bookInfo.bookType == 1) return BookType.TRANSLATION;
         else if (bookInfo.bookType == 2 && bookInfo.categoryId in fanficID)
-          return BookType.fanfiction;
-        return BookType.original;
+          return BookType.FANFICTION;
+        return BookType.ORIGINAL;
       })();
       bookList.push({
         title: book.bookName,
@@ -74,8 +67,8 @@ async function scrapeWebnovel() {
         content_rating: [bookInfo.ageGroup],
         status:
           bookInfo.actionStatus == 30
-            ? BookStatus.ongoing
-            : BookStatus.completed,
+            ? BookStatus.ONGOING
+            : BookStatus.COMPLETED,
         book_publisher: {
           name: "Webnovel",
           views: bookInfo.pvNum,
@@ -95,13 +88,13 @@ async function scrapeWebnovel() {
         },
         original_language: (() => {
           if (bookInfo.language?.url?.includes("qidian")) return "Chinese";
-          else if (bookType == BookType.translation) return "Korean";
+          else if (bookType == BookType.TRANSLATION) return "Korean";
           else return "English";
         })(),
       });
     });
 
-    console.log(i+1)
+    console.log(i + 1);
     await new Promise((r) => setTimeout(r, 200));
   }
   fs.appendFile("webnovel.txt", JSON.stringify(bookList), function (err) {

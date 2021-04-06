@@ -1,4 +1,4 @@
-export interface Book {
+export class Book {
   title: string;
   author: Author;
   cover: string;
@@ -13,17 +13,17 @@ export interface Book {
   content_rating: string[];
 }
 
-export interface Category {
+export class Category {
   name: string;
 }
 
-export interface Author {
+export class Author {
   publisher_author_id: string;
   publisher_author_url: string;
   name: string;
 }
 
-export interface BookPublisher {
+export class BookPublisher {
   name: string;
   link: string;
   publisher_book_id: string;
@@ -34,7 +34,7 @@ export interface BookPublisher {
   rating_count: number;
 }
 
-export interface Chapter {
+export class Chapter {
   title: string;
   link: string;
   locked: boolean;
@@ -43,14 +43,14 @@ export interface Chapter {
 }
 
 export enum BookType {
-  original = "original",
-  translation = "translation",
-  fanfiction = "fanfiction",
+  ORIGINAL = "original",
+  TRANSLATION = "translation",
+  FANFICTION = "fanfiction",
 }
 
 export enum BookStatus {
-  ongoing = "ongoing",
-  completed = "completed",
-  hiatus = "hiatus",
-  dropped = "dropped",
+  ONGOING = "ongoing",
+  COMPLETED = "completed",
+  HIATUS = "hiatus",
+  DROPPED = "dropped",
 }
