@@ -32,6 +32,7 @@ export class BookPublisher {
   created_at: number;
   rating: number;
   rating_count: number;
+  collection_count: number;
 }
 
 export class Chapter {
