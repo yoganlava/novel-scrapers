@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { asyncForEach } from "./utils";
+import { asyncForEach } from "../utils";
 import * as fs from "fs";
 import {
   BookType,
@@ -9,7 +9,7 @@ import {
   Author,
   Category,
   BookPublisher,
-} from "./entities";
+} from "../entities";
 
 const fanficID = [
   81006,
@@ -31,6 +31,7 @@ async function getBookInfo(id: number) {
 }
 
 async function scrapeWebnovel() {
+  // ! Collection num
   let bookList: Book[] = [];
   for (let i = 0; i < 500; i++) {
     let res = await fetch(
@@ -77,6 +78,8 @@ async function scrapeWebnovel() {
           publisher_book_id: bookInfo.bookId,
           rating_count: bookInfo.voters,
           created_at: bookInfo.publishTime,
+          // TODO
+          collection_count: 0
         },
         author: {
           publisher_author_id: bookInfo.authorItems?.[0]?.guid,
