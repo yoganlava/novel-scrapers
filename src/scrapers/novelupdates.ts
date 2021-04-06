@@ -1,4 +1,4 @@
-import { asyncForEach } from "./utils";
+import { asyncForEach } from "../utils";
 import cheerio from "cheerio";
 import puppeteer from "puppeteer-extra";
 
