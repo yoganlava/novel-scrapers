@@ -79,7 +79,7 @@ async function scrapeWebnovel() {
           rating_count: bookInfo.voters,
           created_at: bookInfo.publishTime,
           // TODO
-          collection_count: 0
+          collection_count: 0,
         },
         author: {
           publisher_author_id: bookInfo.authorItems?.[0]?.guid,
