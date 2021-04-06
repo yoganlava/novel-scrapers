@@ -1,5 +1,6 @@
 import { asyncForEach } from "../utils";
 import cheerio from "cheerio";
+import fs from "fs";
 import puppeteer from "puppeteer-extra";
 import {
   BookType,
@@ -20,24 +21,36 @@ async function scrapeNovelUpdates() {
   let booksArray = [];
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
+  let pageNum = 1;
   await page.goto(
-    "https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc"
+    `https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc&pg=${pageNum}`
   );
   await page.waitForSelector(".search_main_box_nu");
-  let $ = cheerio.load(await page.content());
-  let booksElements = $(".search_main_box_nu");
-
-  for (let i = 0; i < booksElements.length; i++) {
+  let $ = await cheerio.load(await page.content());
+  while(true) {
+    let booksElements = $(".search_main_box_nu");
+    for (let i = 0; i < booksElements.length; i++) {
+      await page.goto(
+        (booksElements[i].children[1] as any).children[0].children[1].attribs.href
+      );
+      await page.waitForSelector(".l-content");
+      await page.evaluate(() => {
+        list_allchpstwo();
+      });
+      await page.waitForSelector(".sp_chp");
+      let book = await scrapePage(await page.content(), page.url());
+      booksArray.push(book);
+    }
+    fs.writeFileSync("novelupdates.txt", JSON.stringify(booksArray));
+    if ($(".next_page").length == 0)
+      break;
     await page.goto(
-      (booksElements[i].children[1] as any).children[0].children[1].attribs.href
+      `https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc&pg=${++pageNum}`
     );
-    await page.waitForSelector(".l-content");
-    await page.evaluate(() => {
-      list_allchpstwo();
-    });
-    await page.waitForSelector(".sp_chp");
-    console.log(await scrapePage(await page.content(), page.url()));
+    await page.waitForSelector(".search_main_box_nu");
+    $ = cheerio.load(await page.content());
   }
+
   await browser.close();
 }
 
@@ -52,7 +65,6 @@ async function scrapePage(content: string, link: string): Promise<Book> {
       publisher_author_url: $("#authtag").first().attr().href,
       name: $("#authtag").first().text(),
     },
-    cover: $(".seriesimg").children().first().attr().src,
     categories: (() => {
       let categories: Category[] = [];
       $("#showtags")
@@ -88,7 +100,23 @@ async function scrapePage(content: string, link: string): Promise<Book> {
       return "Not specified";
     })(),
     book_publisher: {
+      chapters: (() => {
+        let chapters: Chapter[] = []
+        $(".sp_chp").children().toArray().reverse().forEach(element => {
+          if (element.tagName == "div")
+            return
+          chapters.push({
+            title: (element.children[1] as any).children[0].attribs.title,
+            link: (element.children[1] as any).attribs.href,
+            locked: false,
+            word_count: 0,
+            volume_title: "Volume 1",
+          })
+        });
+        return chapters
+      })(),
       name: "Novel Updates",
+      cover: $(".seriesimg").children().first().attr().src,
       link: link,
       publisher_book_id: link.split("/")[link.split("/").length - 2],
       views: 0,

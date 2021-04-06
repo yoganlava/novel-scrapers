@@ -32,6 +32,7 @@ async function getBookInfo(id: number) {
 
 async function scrapeWebnovel() {
   // ! Collection num
+  // ! Chapters
   let bookList: Book[] = [];
   for (let i = 0; i < 500; i++) {
     let res = await fetch(
