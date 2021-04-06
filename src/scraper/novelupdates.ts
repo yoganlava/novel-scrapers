@@ -22,7 +22,6 @@ async function scrapeNovelUpdates() {
     );
     await page.waitForSelector(".l-content");
   }
-
   await browser.close();
 }
 
