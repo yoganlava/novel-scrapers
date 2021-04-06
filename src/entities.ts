@@ -33,6 +33,7 @@ export class BookPublisher {
   rating: number;
   rating_count: number;
   collection_count: number;
+  cover: string;
 }
 
 export class Chapter {
