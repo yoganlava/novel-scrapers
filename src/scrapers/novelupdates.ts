@@ -27,11 +27,12 @@ async function scrapeNovelUpdates() {
   );
   await page.waitForSelector(".search_main_box_nu");
   let $ = await cheerio.load(await page.content());
-  while(true) {
+  while (true) {
     let booksElements = $(".search_main_box_nu");
     for (let i = 0; i < booksElements.length; i++) {
       await page.goto(
-        (booksElements[i].children[1] as any).children[0].children[1].attribs.href
+        (booksElements[i].children[1] as any).children[0].children[1].attribs
+          .href
       );
       await page.waitForSelector(".l-content");
       await page.evaluate(() => {
@@ -43,8 +44,7 @@ async function scrapeNovelUpdates() {
       booksArray.push(book);
     }
     fs.writeFileSync("novelupdates.txt", JSON.stringify(booksArray));
-    if ($(".next_page").length == 0)
-      break;
+    if ($(".next_page").length == 0) break;
     await page.goto(
       `https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc&pg=${++pageNum}`
     );
@@ -102,19 +102,24 @@ async function scrapePage(content: string, link: string): Promise<Book> {
     })(),
     book_publisher: {
       chapters: (() => {
-        let chapters: Chapter[] = []
-        $(".sp_chp").children().toArray().reverse().forEach(element => {
-          if (element.tagName == "div")
-            return
-          chapters.push({
-            title: (element.children[1] as any).children[0].attribs.title,
-            link: (element.children[1] as any).attribs.href,
-            locked: false,
-            word_count: 0,
-            volume_title: "Volume 1",
-          })
-        });
-        return chapters
+        let chapters: Chapter[] = [];
+        $(".sp_chp")
+          .children()
+          .toArray()
+          .reverse()
+          .forEach((element, index) => {
+            if (element.tagName == "div") return;
+            chapters.push({
+              index: index + 1,
+              title: (element.children[1] as any).children[0].attribs.title,
+              link: (element.children[1] as any).attribs.href,
+              locked: false,
+              word_count: 0,
+              volume_title: "Volume 1",
+              publisher_created_at: "",
+            });
+          });
+        return chapters;
       })(),
       name: "Novel Updates",
       cover: $(".seriesimg").children().first().attr().src,

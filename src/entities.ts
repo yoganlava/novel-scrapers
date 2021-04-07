@@ -37,11 +37,13 @@ export class BookPublisher {
 }
 
 export class Chapter {
+  index: number;
   title: string;
   link: string;
   locked: boolean;
   word_count: number;
   volume_title: string;
+  publisher_created_at: Date;
 }
 
 export enum BookType {

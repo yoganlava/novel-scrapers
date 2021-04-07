@@ -71,6 +71,7 @@ async function scrapeWebnovel() {
           bookInfo.actionStatus == 30
             ? BookStatus.ONGOING
             : BookStatus.COMPLETED,
+
         book_publisher: {
           name: "Webnovel",
           views: bookInfo.pvNum,
