@@ -25,6 +25,7 @@ export class Author {
 export class BookPublisher {
   name: string;
   link: string;
+  release_frequency: number;
   publisher_book_id: string;
   views: number;
   chapters?: Chapter[];

@@ -39,6 +39,7 @@ async function scrapeNovelUpdates() {
       });
       await page.waitForSelector(".sp_chp");
       let book = await scrapePage(await page.content(), page.url());
+      console.log(book);
       booksArray.push(book);
     }
     fs.writeFileSync("novelupdates.txt", JSON.stringify(booksArray));
@@ -124,6 +125,7 @@ async function scrapePage(content: string, link: string): Promise<Book> {
       rating: parseFloat($(".uvotes").text().substring(1, 4)),
       rating_count: parseInt($(".uvotes").text().split(" ")[3]),
       collection_count: parseInt($(".rlist").text()),
+      release_frequency: parseFloat(($(".seriesother")[13].next as any).data.split(" ")[1])
     },
     chapter_count: $(".sp_chp").children().length,
     content_rating: [
