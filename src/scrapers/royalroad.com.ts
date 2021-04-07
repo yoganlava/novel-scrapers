@@ -1,6 +1,7 @@
 import cheerio from "cheerio";
 import puppeteer from "puppeteer-extra";
-import { Book, Category } from "../entities";
+import { Book, Category, Chapter } from "../entities";
+import fs from "fs-extra";
 
 // add stealth plugin and use defaults (all evasion techniques)
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
@@ -10,7 +11,7 @@ export default async function royalRoad() {
   let max_page = 1762;
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  let books: Book[];
+  let books: Book[] = [];
   for (let i = 1; i < max_page; i++) {
     await page.goto(
       `https://www.royalroad.com/fictions/search?orderBy=views&page=${i}`
@@ -18,17 +19,18 @@ export default async function royalRoad() {
     const content = await page.content();
     let $ = cheerio.load(content);
     // console.log($(".fiction-list-item"));
-    $(".fiction-list-item").each((index, el) => {
+    $(".fiction-list-item").each(async (index, el) => {
       let ch = cheerio.load($(el).html());
 
       let book = {
         title: ch("h2.fiction-title a").text(),
         book_publisher: {
           link:
-            "https://https://www.royalroad.com" +
-            ch("h2.fiction-title a").attr("href"),
+            "https://www.royalroad.com" + ch("h2.fiction-title a").attr("href"),
           chapters: [],
+          cover: ch("figure a img").attr("src"),
         },
+
         categories: [],
       } as Book;
       ch(".row.stats")
@@ -84,8 +86,46 @@ export default async function royalRoad() {
           book.categories.push(...list);
         }
       });
+      books.push(book);
     });
 
+    for (let book of books) {
+      await page.goto(book.book_publisher.link);
+      let $ = cheerio.load(await page.content());
+      let max = 0;
+      console.log($("#chapters").attr("data-chapters"));
+      await page.select(
+        ".dataTable-selector",
+        $("#chapters").attr("data-chapters")
+      );
+      await page.waitForTimeout(100);
+      $ = cheerio.load(await page.content());
+      $("#chapters tbody")
+        .children()
+        .each((index, el) => {
+          let chapter: Chapter = {
+            index: index + 1,
+            title: $(el)
+              .children()
+              .first()
+              .find("a")
+              .text()
+              .trim()
+              .replace(/\n/gi, ""),
+            link: $(el).children().first().find("a").attr("href"),
+            locked: false,
+            publisher_created_at: $(el)
+              .children()
+              .last()
+              .find("time")
+              .attr("title") as any,
+            word_count: 0,
+            volume_title: "",
+          };
+          book.book_publisher.chapters.push(chapter);
+        });
+    }
+    await fs.writeFile("./main.json", JSON.stringify(books));
     return;
   }
 }
