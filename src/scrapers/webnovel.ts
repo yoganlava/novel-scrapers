@@ -31,6 +31,8 @@ async function getBookInfo(id: number) {
 }
 
 async function scrapeWebnovel() {
+  // ! Collection num
+  // ! Chapters
   let bookList: Book[] = [];
   for (let i = 0; i < 500; i++) {
     let res = await fetch(
@@ -78,6 +80,7 @@ async function scrapeWebnovel() {
           publisher_book_id: bookInfo.bookId,
           rating_count: bookInfo.voters,
           created_at: bookInfo.publishTime,
+          // TODO
           collection_count: 0,
         },
         author: {

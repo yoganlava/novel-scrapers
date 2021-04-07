@@ -1,7 +1,6 @@
 export class Book {
   title: string;
   author: Author;
-  cover: string;
   categories: Category[];
   alias?: string[];
   synopsis: string;
