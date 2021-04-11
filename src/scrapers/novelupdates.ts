@@ -118,7 +118,7 @@ async function scrapePage(content: string, link: string, page: Page): Promise<Bo
               word_count: 0
             });
           });
-        return chapters.reverse();
+        return chapters;
       })(),
       name: "Novel Updates",
       cover: $(".seriesimg").children().first().attr().src,
