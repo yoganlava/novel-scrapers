@@ -34,6 +34,7 @@ export class BookPublisher {
   rating_count: number;
   collection_count: number;
   cover: string;
+  last_updated?: string;
 }
 
 export class Chapter {
@@ -42,8 +43,8 @@ export class Chapter {
   link: string;
   locked: boolean;
   word_count: number;
-  volume_title: string;
-  publisher_created_at: Date;
+  volume_title?: string;
+  publisher_created_at?: Date;
 }
 
 export enum BookType {
