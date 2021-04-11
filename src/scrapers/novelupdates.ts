@@ -130,10 +130,7 @@ async function scrapePage(content: string, link: string, page: Page): Promise<Bo
       rating_count: parseInt($(".uvotes").text().split(" ")[3]),
       collection_count: parseInt($(".rlist").text()),
       release_frequency: parseFloat(($(".seriesother")[13].next as any).data.split(" ")[1]),
-      last_updated: (() => {
-        console.log(($("#myTable").children()[1] as any).children[1].children[1].children[0].data.substring(3))
-        return "";
-      })()
+      last_updated: ($("#myTable").children()[1] as any).children[1].children[1].children[0].data.substring(3)
     },
     chapter_count: $(".sp_chp").children().length,
     content_rating: [
