@@ -20,6 +20,7 @@ export class Author {
   publisher_author_id: string;
   publisher_author_url: string;
   name: string;
+  avatar: string;
 }
 
 export class BookPublisher {
@@ -33,11 +34,13 @@ export class BookPublisher {
   rating_count: number;
   collection_count: number;
   cover: string;
+  word_count: number;
 }
 
 export class Chapter {
   index: number;
   title: string;
+  contents: string[];
   link: string;
   locked: boolean;
   word_count: number;
@@ -56,4 +59,5 @@ export enum BookStatus {
   COMPLETED = "completed",
   HIATUS = "hiatus",
   DROPPED = "dropped",
+  STUB = "stub",
 }
