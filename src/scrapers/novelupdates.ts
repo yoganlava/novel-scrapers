@@ -1,7 +1,7 @@
 import { asyncForEach } from "../utils";
 import cheerio from "cheerio";
 import fs from "fs";
-import puppeteer from "puppeteer-extra";
+const puppeteer = require("puppeteer-extra");
 import {
   BookType,
   BookStatus,
@@ -18,39 +18,63 @@ const list_allchpstwo = () => {};
 // add stealth plugin and use defaults (all evasion techniques)
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 puppeteer.use(StealthPlugin());
+const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
+puppeteer.use(AdblockerPlugin());
+
 async function scrapeNovelUpdates() {
   let booksArray = [];
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+  let browser = await puppeteer.launch({ headless: true, slowMo: 500 });
+  let page = await browser.newPage();
   let pageNum = 1;
-  await page.goto(
-    `https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc&pg=${pageNum}`
-  );
-  await page.waitForSelector(".search_main_box_nu");
-  let $ = await cheerio.load(await page.content());
+  let chunks = [
+    30,
+    60,
+    90,
+    120,
+    130,
+    150,
+    180,
+    220,
+    250,
+    280,
+    310,
+    340,
+    370,
+    400,
+  ];
   while (true) {
+    if (chunks.find((id) => id === pageNum)) {
+      await browser.close();
+      browser = await puppeteer.launch({ headless: true, slowMo: 1000 });
+      page = await browser.newPage();
+    }
+
+    await page.goto(
+      `https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc&pg=${pageNum++}`
+    );
+    await page.waitForSelector(".search_main_box_nu");
+    const $ = cheerio.load(await page.content());
     let booksElements = $(".search_main_box_nu");
     for (let i = 0; i < booksElements.length; i++) {
-      await page.goto(
-        (booksElements[i].children[1] as any).children[0].children[1].attribs
-          .href
-      );
+      console.log($(booksElements[i]).find("a").first().attr("href"));
+      let title = $(booksElements[i]).find("a").first().text();
+      await page.goto($(booksElements[i]).find("a").attr("href"));
+
       await page.waitForSelector(".l-content");
       await page.evaluate(() => {
         list_allchpstwo();
       });
       await page.waitForSelector(".sp_chp");
       let bookUrl = page.url();
-      let book = await scrapePage(await page.content(), bookUrl, page);
+      let book = await scrapePage(await page.content(), bookUrl, page, title);
+      console.log(book.title);
       booksArray.push(book);
     }
-    fs.writeFileSync("novelupdates.txt", JSON.stringify(booksArray));
-    if ($(".next_page").length == 0) break;
-    await page.goto(
-      `https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc&pg=${++pageNum}`
+    fs.writeFileSync(
+      "./dataset/novelupdates-1.json",
+      JSON.stringify(booksArray)
     );
-    await page.waitForSelector(".search_main_box_nu");
-    $ = cheerio.load(await page.content());
+    if ($(".next_page").length == 0) break;
   }
 
   await browser.close();
@@ -59,17 +83,18 @@ async function scrapeNovelUpdates() {
 async function scrapePage(
   content: string,
   link: string,
-  page: Page
+  page: Page,
+  title: string
 ): Promise<Book> {
   let $ = cheerio.load(content);
   return {
-    title: $(".seriestitlenu").text(),
+    title: title,
     author: {
       avatar: "",
       publisher_author_id: encodeURI(
         $("#authtag").first().text().replace(" ", "-")
       ),
-      publisher_author_url: $("#authtag").first().attr().href,
+      publisher_author_url: $("#authtag").first().attr("href"),
       name: $("#authtag").first().text(),
     },
     categories: (() => {
@@ -117,8 +142,8 @@ async function scrapePage(
             if (element.tagName == "div") return;
             chapters.push({
               index: index + 1,
-              title: (element.children[1] as any).children[0].attribs.title,
-              link: (element.children[1] as any).attribs.href,
+              title: $(element.children[1]).attr("title"),
+              link: $(element.children[1]).attr("href"),
               locked: false,
               word_count: 0,
               contents: [],
@@ -136,8 +161,8 @@ async function scrapePage(
             if (element.tagName == "div") return;
             chapters.push({
               index: index + 1,
-              title: (element.children[1] as any).children[0].attribs.title,
-              link: (element.children[1] as any).attribs.href,
+              title: $(element.children[1]).attr("title"),
+              link: $(element.children[1]).attr("href"),
               locked: false,
               word_count: 0,
               contents: [],
