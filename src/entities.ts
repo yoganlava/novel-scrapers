@@ -26,6 +26,7 @@ export class Author {
 export class BookPublisher {
   name: string;
   link: string;
+  release_frequency: number;
   publisher_book_id: string;
   views: number;
   chapters?: Chapter[];
@@ -35,6 +36,7 @@ export class BookPublisher {
   collection_count: number;
   cover: string;
   word_count: number;
+  last_updated?: string;
 }
 
 export class Chapter {
@@ -44,8 +46,8 @@ export class Chapter {
   link: string;
   locked: boolean;
   word_count: number;
-  volume_title: string;
-  publisher_created_at: Date;
+  volume_title?: string;
+  publisher_created_at?: Date;
 }
 
 export enum BookType {

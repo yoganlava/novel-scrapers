@@ -11,6 +11,7 @@ import {
   Category,
   BookPublisher,
 } from "../entities";
+import { Page } from "puppeteer";
 
 const list_allchpstwo = () => {};
 
@@ -39,7 +40,8 @@ async function scrapeNovelUpdates() {
         list_allchpstwo();
       });
       await page.waitForSelector(".sp_chp");
-      let book = await scrapePage(await page.content(), page.url());
+      let bookUrl = page.url();
+      let book = await scrapePage(await page.content(), bookUrl, page);
       booksArray.push(book);
     }
     fs.writeFileSync("novelupdates.txt", JSON.stringify(booksArray));
@@ -54,7 +56,7 @@ async function scrapeNovelUpdates() {
   await browser.close();
 }
 
-async function scrapePage(content: string, link: string): Promise<Book> {
+async function scrapePage(content: string, link: string, page: Page): Promise<Book> {
   let $ = cheerio.load(content);
   return {
     title: $(".seriestitlenu").text(),
@@ -100,7 +102,7 @@ async function scrapePage(content: string, link: string): Promise<Book> {
       return "Not specified";
     })(),
     book_publisher: {
-      chapters: (() => {
+      chapters: await (async () => {
         let chapters: Chapter[] = [];
         $(".sp_chp")
           .children()
@@ -113,9 +115,7 @@ async function scrapePage(content: string, link: string): Promise<Book> {
               title: (element.children[1] as any).children[0].attribs.title,
               link: (element.children[1] as any).attribs.href,
               locked: false,
-              word_count: 0,
-              volume_title: "Volume 1",
-              publisher_created_at: "",
+              word_count: 0
             });
           });
         return chapters;
@@ -129,6 +129,8 @@ async function scrapePage(content: string, link: string): Promise<Book> {
       rating: parseFloat($(".uvotes").text().substring(1, 4)),
       rating_count: parseInt($(".uvotes").text().split(" ")[3]),
       collection_count: parseInt($(".rlist").text()),
+      release_frequency: parseFloat(($(".seriesother")[13].next as any).data.split(" ")[1]),
+      last_updated: ($("#myTable").children()[1] as any).children[1].children[1].children[0].data.substring(3)
     },
     chapter_count: $(".sp_chp").children().length,
     content_rating: [
