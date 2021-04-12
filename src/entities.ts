@@ -34,6 +34,7 @@ export class BookPublisher {
   rating: number;
   rating_count: number;
   collection_count: number;
+  chapter_count: number;
   cover: string;
   word_count: number;
   last_updated?: string;

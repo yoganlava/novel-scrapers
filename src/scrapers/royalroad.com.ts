@@ -71,7 +71,7 @@ export default async function royalRoad() {
               chapters: [],
               cover: ch("figure a img").attr("src"),
             },
-
+            author: {},
             categories: [],
           } as Book;
           ch(".row.stats")
@@ -105,6 +105,13 @@ export default async function royalRoad() {
                   break;
                 case 4:
                   book.chapter_count = parseInt(
+                    ch(el)
+                      .children("span")
+                      .text()
+                      .replace(/,/gi, "")
+                      .split(" ")[0]
+                  );
+                  book.book_publisher.chapter_count = parseInt(
                     ch(el)
                       .children("span")
                       .text()
@@ -192,14 +199,31 @@ export default async function royalRoad() {
             }
 
             let $ = cheerio.load(await page.content());
-
             let max = 0;
             console.log(i, "   ", book.book_publisher.link);
-            book.author.name = $(".mt-card-content h3 a").text();
-            book.author.publisher_author_url =
-              "https://www.royalroad.com" +
-              $(".mt-card-content h3 a").attr("href");
-            book.author.avatar = $(".avatar-container-general img").attr("src");
+            book.synopsis = $(".description")
+              .text()
+              .split("\n")
+              .map((item) => item.replace(/\s{2,}/gi, ""))
+              .filter((item) => item.length > 1)
+              .join("\n\n");
+            book.author = {
+              name: $(".fic-title h4 span a").text(),
+              publisher_author_url:
+                "https://www.royalroad.com" +
+                $(".mt-card-content h3 a").attr("href"),
+              avatar: $(".avatar-container-general img")
+                .attr("src")
+                .match("/Content/Images/anon.jpg")
+                ? "https://www.royalroad.com" +
+                  $(".avatar-container-general img").attr("src")
+                : $(".avatar-container-general img").attr("src"),
+              publisher_author_id: $(".mt-card-content h3 a")
+                .attr("href")
+                .split("/")[
+                $(".mt-card-content h3 a").attr("href").split("/").length - 1
+              ],
+            };
             await page.select(
               ".dataTable-selector",
               $("#chapters").attr("data-chapters")

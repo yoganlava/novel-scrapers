@@ -56,11 +56,16 @@ async function scrapeNovelUpdates() {
   await browser.close();
 }
 
-async function scrapePage(content: string, link: string, page: Page): Promise<Book> {
+async function scrapePage(
+  content: string,
+  link: string,
+  page: Page
+): Promise<Book> {
   let $ = cheerio.load(content);
   return {
     title: $(".seriestitlenu").text(),
     author: {
+      avatar: "",
       publisher_author_id: encodeURI(
         $("#authtag").first().text().replace(" ", "-")
       ),
@@ -102,6 +107,25 @@ async function scrapePage(content: string, link: string, page: Page): Promise<Bo
       return "Not specified";
     })(),
     book_publisher: {
+      chapter_count: await (async () => {
+        let chapters: Chapter[] = [];
+        $(".sp_chp")
+          .children()
+          .toArray()
+          .reverse()
+          .forEach((element, index) => {
+            if (element.tagName == "div") return;
+            chapters.push({
+              index: index + 1,
+              title: (element.children[1] as any).children[0].attribs.title,
+              link: (element.children[1] as any).attribs.href,
+              locked: false,
+              word_count: 0,
+              contents: [],
+            });
+          });
+        return chapters.length;
+      })(),
       chapters: await (async () => {
         let chapters: Chapter[] = [];
         $(".sp_chp")
@@ -115,7 +139,8 @@ async function scrapePage(content: string, link: string, page: Page): Promise<Bo
               title: (element.children[1] as any).children[0].attribs.title,
               link: (element.children[1] as any).attribs.href,
               locked: false,
-              word_count: 0
+              word_count: 0,
+              contents: [],
             });
           });
         return chapters;
@@ -123,14 +148,21 @@ async function scrapePage(content: string, link: string, page: Page): Promise<Bo
       name: "Novel Updates",
       cover: $(".seriesimg").children().first().attr().src,
       link: link,
+      word_count: 0,
       publisher_book_id: link.split("/")[link.split("/").length - 2],
       views: 0,
       created_at: new Date($("#edityear").text()).getTime(),
       rating: parseFloat($(".uvotes").text().substring(1, 4)),
       rating_count: parseInt($(".uvotes").text().split(" ")[3]),
       collection_count: parseInt($(".rlist").text()),
-      release_frequency: parseFloat(($(".seriesother")[13].next as any).data.split(" ")[1]),
-      last_updated: ($("#myTable").children()[1] as any).children[1].children[1].children[0].data.substring(3)
+      release_frequency: parseFloat(
+        ($(".seriesother")[13].next as any).data.split(" ")[1]
+      ),
+      last_updated: ($(
+        "#myTable"
+      ).children()[1] as any).children[1].children[1].children[0].data.substring(
+        3
+      ),
     },
     chapter_count: $(".sp_chp").children().length,
     content_rating: [
