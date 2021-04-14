@@ -20,10 +20,10 @@ export default async function royalRoad() {
   let page = await browser.newPage();
   let chunk_index = 0;
   let all_books: any[] = [];
-  let chunks = [0, 300, 600, 900, 1200, 1500, 1767];
+  let chunks = [0, 300, 600, 700, 900, 1200, 1500, 1767];
   for (let chunk of chunks) {
     let books: Book[] = [];
-    if (chunk <= -1) {
+    if (chunk <= 1500) {
     } else {
       for (let i = chunks[chunk_index - 1] + 1; i <= chunk; i++) {
         let error = true,
@@ -83,7 +83,7 @@ export default async function royalRoad() {
                     ch(el)
                       .children("span")
                       .text()
-                      .replace(/,/gi, "")
+                      ?.replace(/,/gi, "")
                       .split(" ")[0]
                   );
                   break;
@@ -99,7 +99,7 @@ export default async function royalRoad() {
                     ch(el)
                       .children("span")
                       .text()
-                      .replace(/,/gi, "")
+                      ?.replace(/,/gi, "")
                       .split(" ")[0]
                   );
                   break;
@@ -108,14 +108,14 @@ export default async function royalRoad() {
                     ch(el)
                       .children("span")
                       .text()
-                      .replace(/,/gi, "")
+                      ?.replace(/,/gi, "")
                       .split(" ")[0]
                   );
                   book.book_publisher.chapter_count = parseInt(
                     ch(el)
                       .children("span")
                       .text()
-                      .replace(/,/gi, "")
+                      ?.replace(/,/gi, "")
                       .split(" ")[0]
                   );
                   break;
@@ -124,7 +124,7 @@ export default async function royalRoad() {
                 case 6:
                   book.synopsis = ch(el)
                     .text()
-                    .replace(/\s{2,}/gi, "");
+                    ?.replace(/\s{2,}/gi, "");
 
                   break;
               }
@@ -185,36 +185,47 @@ export default async function royalRoad() {
           const pageClicked = await page.evaluate(() => {
             return !!document.querySelector(".page-404"); // !! converts anything to boolean
           });
+          let click = true;
+
           if (pageClicked) {
             exclude.push(book.book_publisher.link);
           } else {
-            try {
-              await page.waitForSelector(".dataTable-selector");
-            } catch (error) {
-              console.log(error);
-              await page.goto(book.book_publisher.link, {
-                waitUntil: "networkidle2",
-              });
-              await page.waitForSelector(".dataTable-selector", { timeout: 0 });
+            if (book.book_publisher.chapter_count <= 10) {
+              click = false;
+            } else {
+              try {
+                await page.waitForSelector(".dataTable-selector");
+              } catch (error) {
+                console.log(error);
+                await page.goto(book.book_publisher.link, {
+                  waitUntil: "networkidle2",
+                });
+                try {
+                  await page.waitForSelector(".dataTable-selector", {
+                    timeout: 300000,
+                  });
+                } catch (error) {
+                  click = false;
+                }
+              }
             }
-
             let $ = cheerio.load(await page.content());
             let max = 0;
             console.log(i, "   ", book.book_publisher.link);
             book.synopsis = $(".description")
               .text()
-              .split("\n")
-              .map((item) => item.replace(/\s{2,}/gi, ""))
-              .filter((item) => item.length > 1)
-              .join("\n\n");
+              ?.split("\n")
+              ?.map((item) => item?.replace(/\s{2,}/gi, ""))
+              ?.filter((item) => item.length > 1)
+              ?.join("\n\n");
             book.author = {
               name: $(".fic-title h4 span a").text(),
               publisher_author_url:
                 "https://www.royalroad.com" +
                 $(".mt-card-content h3 a").attr("href"),
               avatar: $(".avatar-container-general img")
-                .attr("src")
-                .match("/Content/Images/anon.jpg")
+                ?.attr("src")
+                ?.match("/Content/Images/anon.jpg")
                 ? "https://www.royalroad.com" +
                   $(".avatar-container-general img").attr("src")
                 : $(".avatar-container-general img").attr("src"),
@@ -224,10 +235,13 @@ export default async function royalRoad() {
                 $(".mt-card-content h3 a").attr("href").split("/").length - 1
               ],
             };
-            await page.select(
-              ".dataTable-selector",
-              $("#chapters").attr("data-chapters")
-            );
+            if (click) {
+              await page.select(
+                ".dataTable-selector",
+                $("#chapters").attr("data-chapters")
+              );
+            }
+
             $(".fiction-info span.label.label-default").each((index, el) => {
               if (
                 $(el).text().toLowerCase() === "ongoing" ||
@@ -248,7 +262,7 @@ export default async function royalRoad() {
                 .split("calculated from")[1]
                 .trim()
                 .split(" ")[0]
-                .replace(/,/gi, "")
+                ?.replace(/,/gi, "")
             );
             $("#chapters tbody")
               .children()
@@ -261,7 +275,7 @@ export default async function royalRoad() {
                     .find("a")
                     .text()
                     .trim()
-                    .replace(/\n/gi, ""),
+                    ?.replace(/\n/gi, ""),
                   contents: [],
                   link:
                     "https://www.royalroad.com" +
@@ -273,7 +287,7 @@ export default async function royalRoad() {
                       .last()
                       .find("time")
                       .attr("title")
-                      .replace("Monday,", "")
+                      ?.replace("Monday,", "")
                       .replace("Tuesday,", "")
                       .replace("Wednesday,", "")
                       .replace("Thursday,", "")

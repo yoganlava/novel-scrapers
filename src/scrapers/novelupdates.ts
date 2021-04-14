@@ -23,7 +23,7 @@ puppeteer.use(AdblockerPlugin());
 
 async function scrapeNovelUpdates() {
   let booksArray = [];
-  let browser = await puppeteer.launch({ headless: true, slowMo: 500 });
+  let browser = await puppeteer.launch({ headless: false, slowMo: 500 });
   let page = await browser.newPage();
   let pageNum = 1;
   let chunks = [
@@ -42,6 +42,14 @@ async function scrapeNovelUpdates() {
     370,
     400,
   ];
+  const file =
+    JSON.parse(fs.readFileSync("./dataset/novelupdates-1.json", "utf8"))
+      .length / 25;
+  pageNum = file;
+  booksArray = JSON.parse(
+    fs.readFileSync("./dataset/novelupdates-1.json", "utf8")
+  );
+  console.log(file);
   while (true) {
     if (chunks.find((id) => id === pageNum)) {
       await browser.close();
@@ -185,7 +193,7 @@ async function scrapePage(
       ),
       last_updated: ($(
         "#myTable"
-      ).children()[1] as any).children[1].children[1].children[0].data.substring(
+      )?.children()?.[1] as any)?.children?.[1]?.children?.[1]?.children?.[0]?.data?.substring(
         3
       ),
     },
