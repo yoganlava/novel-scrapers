@@ -20,13 +20,13 @@ export class Author {
   publisher_author_id: string;
   publisher_author_url: string;
   name: string;
-  avatar: string;
+  avatar?: string;
 }
 
 export class BookPublisher {
   name: string;
   link: string;
-  release_frequency: number;
+  release_frequency?: number;
   publisher_book_id: string;
   views: number;
   chapters?: Chapter[];
@@ -36,17 +36,17 @@ export class BookPublisher {
   collection_count: number;
   chapter_count: number;
   cover: string;
-  word_count: number;
+  word_count?: number;
   last_updated?: string;
 }
 
 export class Chapter {
   index: number;
   title: string;
-  contents: string[];
+  contents?: string[];
   link: string;
   locked: boolean;
-  word_count: number;
+  word_count?: number;
   volume_title?: string;
   publisher_created_at?: Date;
 }
