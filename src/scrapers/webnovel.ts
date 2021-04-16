@@ -61,7 +61,6 @@ async function scrapeWebnovel() {
       bookList.push({
         title: book.bookName,
         alias: [bookInfo.language?.text],
-        cover: `http://img.webnovel.com/bookcover/${bookInfo.bookId}`,
         synopsis: book.description,
         categories: categories,
         chapter_count: book.chapterNum,
@@ -73,6 +72,30 @@ async function scrapeWebnovel() {
             : BookStatus.COMPLETED,
 
         book_publisher: {
+          cover: `http://img.webnovel.com/bookcover/${bookInfo.bookId}`,
+          chapter_count: bookInfo.totalChapterNum,
+          chapters: await (async () => {
+            let chapterListInfo = ((await fetch(
+              "https://m.webnovel.com/go/pcm/chapter/get-chapter-list?_csrfToken=59325c83-b96a-4369-8d6f-8964a86164b7&bookId=" +
+                bookInfo.bookId
+            )) as any).data;
+            let chapters: Chapter[] = [];
+            chapterListInfo.volumeItems.forEach((volume) => {
+              let volumeName = volume.volumeName
+                ? volume.volumeName
+                : "Volume " + volume.volumeId;
+              volume.chapterItems.forEach((chapter) => {
+                chapters.push({
+                  title: chapter.chapterName,
+                  index: chapter.index,
+                  locked: chapter.isVip == 2,
+                  link: `https://www.webnovel.com/book/${bookInfo.bookId}/${chapter.chapterId}`,
+                  volume_title: volumeName,
+                });
+              });
+            });
+            return chapters;
+          })(),
           name: "Webnovel",
           views: bookInfo.pvNum,
           rating: bookInfo.totalScore,
