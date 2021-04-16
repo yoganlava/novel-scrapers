@@ -23,8 +23,29 @@ puppeteer.use(AdblockerPlugin());
 
 async function scrapeNovelUpdates() {
   let booksArray = [];
-  let browser = await puppeteer.launch({ headless: false, slowMo: 500 });
+  let browser = await puppeteer.launch({
+    headless: false,
+    slowMo: 1000,
+  });
+
   let page = await browser.newPage();
+  await page.setCookie(
+    {
+      name: "cf_clearance",
+      value: "cf5547887b344563b29319bf03f067cef422cf59-1618386526-0-250",
+      domain: ".novelupdates.com",
+    },
+    {
+      name: "__cfduid",
+      value: "dfd6df34ab74c2b81f0e21a9db38fb60e1615981361",
+      domain: ".novelupdates.com",
+    },
+    {
+      name: "_pubcid",
+      value: "cc59982d-6f87-419b-b65b-26b75d903904",
+      domain: ".novelupdates.com",
+    }
+  );
   let pageNum = 1;
   let chunks = [
     30,
@@ -51,14 +72,18 @@ async function scrapeNovelUpdates() {
   );
   console.log(file);
   while (true) {
-    if (chunks.find((id) => id === pageNum)) {
-      await browser.close();
-      browser = await puppeteer.launch({ headless: true, slowMo: 1000 });
-      page = await browser.newPage();
-    }
+    // if (chunks.find((id) => id === pageNum)) {
+    //   await browser.close();
+    //   browser = await puppeteer.launch({ headless: true, slowMo: 1000 });
+    //   page = await browser.newPage();
+    // }
 
     await page.goto(
-      `https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc&pg=${pageNum++}`
+      `https://www.novelupdates.com/series-finder/?sf=1&sort=srel&order=desc&pg=${pageNum++}`,
+      {
+        waitUntil: "networkidle2",
+        timeout: 0,
+      }
     );
     await page.waitForSelector(".search_main_box_nu");
     const $ = cheerio.load(await page.content());
@@ -66,7 +91,10 @@ async function scrapeNovelUpdates() {
     for (let i = 0; i < booksElements.length; i++) {
       console.log($(booksElements[i]).find("a").first().attr("href"));
       let title = $(booksElements[i]).find("a").first().text();
-      await page.goto($(booksElements[i]).find("a").attr("href"));
+      await page.goto($(booksElements[i]).find("a").attr("href"), {
+        waitUntil: "networkidle2",
+        timeout: 0,
+      });
 
       await page.waitForSelector(".l-content");
       await page.evaluate(() => {
